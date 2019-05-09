@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * NOTE: <trim /> 标签的 SqlNode 实现类
  * @author Clinton Begin
  */
 public class TrimSqlNode implements SqlNode {
@@ -32,7 +33,13 @@ public class TrimSqlNode implements SqlNode {
   private final SqlNode contents;
   private final String prefix;
   private final String suffix;
+  /**
+   * 需要被删除的前缀
+   */
   private final List<String> prefixesToOverride;
+  /**
+   * 需要删除的后缀
+   */
   private final List<String> suffixesToOverride;
   private final Configuration configuration;
 
@@ -52,11 +59,18 @@ public class TrimSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     FilteredDynamicContext filteredDynamicContext = new FilteredDynamicContext(context);
+    //NOTE: 执行 contents.apply  封装sql
     boolean result = contents.apply(filteredDynamicContext);
+    //NOTE: FilteredDynamicContext 的应用
     filteredDynamicContext.applyAll();
     return result;
   }
 
+  /**
+   * 使用 | 分隔字符串成字符串数组，并都转换成大写
+   * @param overrides
+   * @return
+   */
   private static List<String> parseOverrides(String overrides) {
     if (overrides != null) {
       final StringTokenizer parser = new StringTokenizer(overrides, "|", false);
@@ -85,6 +99,7 @@ public class TrimSqlNode implements SqlNode {
 
     public void applyAll() {
       sqlBuffer = new StringBuilder(sqlBuffer.toString().trim());
+      //NOTE: 将 sqlBuffer 大写，生成新的 trimmedUppercaseSql 对象
       String trimmedUppercaseSql = sqlBuffer.toString().toUpperCase(Locale.ENGLISH);
       if (trimmedUppercaseSql.length() > 0) {
         applyPrefix(sqlBuffer, trimmedUppercaseSql);
@@ -118,9 +133,15 @@ public class TrimSqlNode implements SqlNode {
       return delegate.getSql();
     }
 
+    /**
+     * 应用 TrimSqlNode 的 trim 逻辑
+     * @param sql
+     * @param trimmedUppercaseSql
+     */
     private void applyPrefix(StringBuilder sql, String trimmedUppercaseSql) {
       if (!prefixApplied) {
         prefixApplied = true;
+        // prefixesToOverride 非空，先删除
         if (prefixesToOverride != null) {
           for (String toRemove : prefixesToOverride) {
             if (trimmedUppercaseSql.startsWith(toRemove)) {
@@ -129,6 +150,7 @@ public class TrimSqlNode implements SqlNode {
             }
           }
         }
+        // prefix 非空，再添加
         if (prefix != null) {
           sql.insert(0, " ");
           sql.insert(0, prefix);

@@ -68,7 +68,7 @@
   <subsection name="SqlSessions" id="sqlSessions">
   <p>使用 MyBatis 的主要 Java 接口就是 SqlSession。你可以通过这个接口来执行命令，获取映射器和管理事务。我们会概括讨论一下 SqlSession 本身，但是首先我们还是要了解如何获取一个 SqlSession 实例。SqlSessions 是由 SqlSessionFactory 实例创建的。SqlSessionFactory 对象包含创建 SqlSession 实例的所有方法。而 SqlSessionFactory 本身是由 SqlSessionFactoryBuilder 创建的，它可以从 XML、注解或手动配置 Java 代码来创建 SqlSessionFactory。</p>
   <p>
-  <span class="label important">注意</span> 当 Mybatis 与一些依赖注入框架（如 Spring 或者 Guice）同时使用时，SqlSessions 将被依赖注入框架所创建，所以你不需要使用 SqlSessionFactoryBuilder 或者 SqlSessionFactory，可以直接看 SqlSession 这一节。请参考 Mybatis-Spring 或者 Mybatis-Guice 手册了解更多信息。</p>
+  <span class="label important">注意</span> 当 jdbc.vs.Mybatis 与一些依赖注入框架（如 Spring 或者 Guice）同时使用时，SqlSessions 将被依赖注入框架所创建，所以你不需要使用 SqlSessionFactoryBuilder 或者 SqlSessionFactory，可以直接看 SqlSession 这一节。请参考 jdbc.vs.Mybatis-Spring 或者 jdbc.vs.Mybatis-Guice 手册了解更多信息。</p>
   <h4>SqlSessionFactoryBuilder</h4>
   <p>SqlSessionFactoryBuilder 有五个 build() 方法，每一种都允许你从不同的资源中创建一个 SqlSession 实例。</p>
   <source>SqlSessionFactory build(InputStream inputStream)
@@ -264,9 +264,9 @@ void commit(boolean force)
 void rollback()
 void rollback(boolean force)</source>
   <p>默认情况下 MyBatis 不会自动提交事务，除非它侦测到有插入、更新或删除操作改变了数据库。如果你已经做出了一些改变而没有使用这些方法，那么你可以传递 true 值到 commit 和 rollback 方法来保证事务被正常处理（注意，在自动提交模式或者使用了外部事务管理器的情况下设置 force 值对 session 无效）。很多时候你不用调用 rollback()，因为 MyBatis 会在你没有调用 commit 时替你完成回滚操作。然而，如果你需要在支持多提交和回滚的 session 中获得更多细粒度控制，你可以使用回滚操作来达到目的。</p>
-  <p><span class="label important">注意</span> MyBatis-Spring 和 MyBatis-Guice 提供了声明事务处理，所以如果你在使用 Mybatis 的同时使用了Spring 或者 Guice，那么请参考它们的手册以获取更多的内容。</p>
+  <p><span class="label important">注意</span> MyBatis-Spring 和 MyBatis-Guice 提供了声明事务处理，所以如果你在使用 jdbc.vs.Mybatis 的同时使用了Spring 或者 Guice，那么请参考它们的手册以获取更多的内容。</p>
   <h5>本地缓存</h5>
-	<p>Mybatis 使用到了两种缓存：本地缓存（local cache）和二级缓存（second level cache）。</p>
+	<p>jdbc.vs.Mybatis 使用到了两种缓存：本地缓存（local cache）和二级缓存（second level cache）。</p>
 	<p>每当一个新 session 被创建，MyBatis 就会创建一个与之相关联的本地缓存。任何在 session 执行过的查询语句本身都会被保存在本地缓存中，那么，相同的查询语句和相同的参数所产生的更改就不会二度影响数据库了。本地缓存会被增删改、提交事务、关闭事务以及关闭 session 所清空。</p>
 	<p>默认情况下，本地缓存数据可在整个 session 的周期内使用，这一缓存需要被用来解决循环引用错误和加快重复嵌套查询的速度，所以它可以不被禁用掉，但是你可以设置 localCacheScope=STATEMENT 表示缓存仅在语句执行时有效。</p>
 	<p>注意，如果 localCacheScope 被设置为 SESSION，那么 MyBatis 所返回的引用将传递给保存在本地缓存里的相同对象。对返回的对象（例如 list）做出任何更新将会影响本地缓存的内容，进而影响存活在 session 生命周期中的缓存所返回的值。因此，不要对 MyBatis 所返回的对象作出更改，以防后患。</p>
@@ -489,13 +489,13 @@ try (SqlSession session = sqlSessionFactory.openSession()) {
         <td><code>@ResultType</code></td>
         <td><code>方法</code></td>
         <td>N/A</td>
-        <td>此注解在使用了结果处理器的情况下使用。在这种情况下，返回类型为 void，所以 Mybatis 必须有一种方式决定对象的类型，用于构造每行数据。如果有 XML 的结果映射，请使用 <code>@ResultMap</code> 注解。如果结果类型在 XML 的 <code>&lt;select&gt;</code> 节点中指定了，就不需要其他的注解了。其他情况下则使用此注解。比如，如果 @Select 注解在一个将使用结果处理器的方法上，那么返回类型必须是 void 并且这个注解（或者@ResultMap）必选。这个注解仅在方法返回类型是 void 的情况下生效。</td>
+        <td>此注解在使用了结果处理器的情况下使用。在这种情况下，返回类型为 void，所以 jdbc.vs.Mybatis 必须有一种方式决定对象的类型，用于构造每行数据。如果有 XML 的结果映射，请使用 <code>@ResultMap</code> 注解。如果结果类型在 XML 的 <code>&lt;select&gt;</code> 节点中指定了，就不需要其他的注解了。其他情况下则使用此注解。比如，如果 @Select 注解在一个将使用结果处理器的方法上，那么返回类型必须是 void 并且这个注解（或者@ResultMap）必选。这个注解仅在方法返回类型是 void 的情况下生效。</td>
       </tr>
       <tr>
         <td><code>@Flush</code></td>
         <td><code>方法</code></td>
         <td>N/A</td>
-        <td>如果使用了这个注解，定义在 Mapper 接口中的方法能够调用 <code>SqlSession#flushStatements()</code> 方法。（Mybatis 3.3及以上）</td>
+        <td>如果使用了这个注解，定义在 Mapper 接口中的方法能够调用 <code>SqlSession#flushStatements()</code> 方法。（jdbc.vs.Mybatis 3.3及以上）</td>
       </tr>
     </tbody>
   </table>

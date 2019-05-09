@@ -50,6 +50,12 @@ public class PropertyParser {
     // Prevent Instantiation
   }
 
+  /**
+   * 属性解析 （取值）
+   * @param string
+   * @param variables
+   * @return
+   */
   public static String parse(String string, Properties variables) {
     VariableTokenHandler handler = new VariableTokenHandler(variables);
     GenericTokenParser parser = new GenericTokenParser("${", "}", handler);

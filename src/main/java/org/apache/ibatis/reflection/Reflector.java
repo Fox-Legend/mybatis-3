@@ -42,19 +42,42 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
  *
+ * Reflector 会缓存反射操作需要的类的信息，如get、set方法
+ *
  * @author Clinton Begin
  */
 public class Reflector {
 
+  /**
+   * 对应的类
+   */
   private final Class<?> type;
+  /**
+   * 可读属性数组
+   */
   private final String[] readablePropertyNames;
   private final String[] writablePropertyNames;
+  /**
+   * 属性对应的 setting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
   private final Map<String, Invoker> setMethods = new HashMap<>();
   private final Map<String, Invoker> getMethods = new HashMap<>();
+  /**
+   * 属性对应的 setting 方法的方法参数类型的映射。{@link #setMethods}
+   *
+   * key 为属性名称
+   * value 为方法参数类型
+   */
   private final Map<String, Class<?>> setTypes = new HashMap<>();
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   private Constructor<?> defaultConstructor;
 
+  /**
+   * 不区分大小写的属性集合
+   */
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
@@ -89,16 +112,23 @@ public class Reflector {
       if (method.getParameterTypes().length > 0) {
         continue;
       }
+      //NOTE: 开始遍历get和is方法
       String name = method.getName();
       if ((name.startsWith("get") && name.length() > 3)
           || (name.startsWith("is") && name.length() > 2)) {
+        //NOTE: 获得属性名称
         name = PropertyNamer.methodToProperty(name);
         addMethodConflict(conflictingGetters, name, method);
       }
     }
+    //NOTE: 解决 getting 冲突方法
     resolveGetterConflicts(conflictingGetters);
   }
 
+  /**
+   * 最终，一个属性，只保留一个对应的方法。
+   * @param conflictingGetters
+   */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
@@ -110,7 +140,9 @@ public class Reflector {
         }
         Class<?> winnerType = winner.getReturnType();
         Class<?> candidateType = candidate.getReturnType();
+        //NOTE: 返回值相同的同一个属性的方法
         if (candidateType.equals(winnerType)) {
+          //NOTE: 报错的情况是因为写了两个返回值一样的getter方法，
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
@@ -119,8 +151,10 @@ public class Reflector {
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
+          // 不符合选择子类
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
+          //符合选择子类。因为子类可以修改放大返回值。例如，父类的一个方法的返回值为 List ，子类对该方法的返回值可以覆写为 ArrayList 。
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
@@ -157,7 +191,15 @@ public class Reflector {
     resolveSetterConflicts(conflictingSetters);
   }
 
+  /**
+   * 如果方法name已经 存在，则将method加入到对应的List中
+   * 否则创建一个新的List
+   * @param conflictingMethods
+   * @param name
+   * @param method
+   */
   private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
+    //NOTE: 因为父类和子类都可能定义了相同属性的 getting 方法
     List<Method> list = conflictingMethods.computeIfAbsent(name, k -> new ArrayList<>());
     list.add(method);
   }
@@ -297,20 +339,29 @@ public class Reflector {
       // we also need to look for interface methods -
       // because the class may be abstract
       Class<?>[] interfaces = currentClass.getInterfaces();
+      //NOTE: 遍历接口的所有方法
       for (Class<?> anInterface : interfaces) {
         addUniqueMethods(uniqueMethods, anInterface.getMethods());
       }
 
+      //NOTE: 继续找父类的方法
       currentClass = currentClass.getSuperclass();
     }
 
     Collection<Method> methods = uniqueMethods.values();
-
+    //NOTE: 返回所有方法
     return methods.toArray(new Method[methods.size()]);
   }
 
+  /**
+   * key : 方法的返回值类型+方法名+参数列表类型
+   * value: Method
+   * @param uniqueMethods
+   * @param methods
+   */
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
+      //NOTE: 非Bridge方法
       if (!currentMethod.isBridge()) {
         String signature = getSignature(currentMethod);
         // check to see if the method is already known
@@ -323,6 +374,11 @@ public class Reflector {
     }
   }
 
+  /**
+   * signature = returnType#methodName:param1Type,param2Type
+   * @param method
+   * @return
+   */
   private String getSignature(Method method) {
     StringBuilder sb = new StringBuilder();
     Class<?> returnType = method.getReturnType();

@@ -30,6 +30,11 @@ public class GenericTokenParser {
     this.handler = handler;
   }
 
+  /**
+   * NOTE: 解析动态sql语句，形如#{}
+   * @param text
+   * @return
+   */
   public String parse(String text) {
     if (text == null || text.isEmpty()) {
       return "";
@@ -75,6 +80,7 @@ public class GenericTokenParser {
           builder.append(src, start, src.length - start);
           offset = src.length;
         } else {
+          //NOTE: 标记为动态sql
           builder.append(handler.handleToken(expression.toString()));
           offset = end + closeToken.length();
         }

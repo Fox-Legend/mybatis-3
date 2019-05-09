@@ -125,7 +125,7 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <name>Mybatis GitHub Pages</name>
+      <name>jdbc.vs.Mybatis GitHub Pages</name>
       <url>git:ssh://git@github.com/mybatis/mybatis-3.git?gh-pages#</url>
     </site>
   </distributionManagement>
@@ -267,6 +267,7 @@
       <version>2.10</version>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <build>

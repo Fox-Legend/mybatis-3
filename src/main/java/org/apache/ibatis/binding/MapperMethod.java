@@ -39,6 +39,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
 /**
+ * Mapper 代理sql执行对应Method的辅助类
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
@@ -54,11 +55,19 @@ public class MapperMethod {
     this.method = new MethodSignature(config, mapperInterface, method);
   }
 
+  /**
+   * 执行sql
+   * @param sqlSession
+   * @param args
+   * @return
+   */
   public Object execute(SqlSession sqlSession, Object[] args) {
     Object result;
     switch (command.getType()) {
       case INSERT: {
+        //NOTE: 获得参数名与参数值之间的映射表，实际调用了paramNameResolver.getNamedParams(args)
         Object param = method.convertArgsToSqlCommandParam(args);
+        //NOTE: 调用salSession对应sql执行方法
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
@@ -85,6 +94,7 @@ public class MapperMethod {
         } else {
           Object param = method.convertArgsToSqlCommandParam(args);
           result = sqlSession.selectOne(command.getName(), param);
+          //NOTE: 返回值为Optional类型
           if (method.returnsOptional()
               && (result == null || !method.getReturnType().equals(result.getClass()))) {
             result = Optional.ofNullable(result);
@@ -139,8 +149,11 @@ public class MapperMethod {
 
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
+    //NOTE: 获取方法参数列表和对应参数值的映射，记录在ParamMap中或者是一个单值
     Object param = method.convertArgsToSqlCommandParam(args);
+    //NOTE: 参数列表中有RowBounds，表示需要分页
     if (method.hasRowBounds()) {
+      //NOTE: 获取RowBounds的参数对象，包含分页大小和起始页
       RowBounds rowBounds = method.extractRowBounds(args);
       result = sqlSession.selectList(command.getName(), param, rowBounds);
     } else {
@@ -208,6 +221,7 @@ public class MapperMethod {
 
     @Override
     public V get(Object key) {
+      //NOTE: 若不包含key（参数名称）则报错
       if (!super.containsKey(key)) {
         throw new BindingException("Parameter '" + key + "' not found. Available parameters are " + keySet());
       }
@@ -218,12 +232,20 @@ public class MapperMethod {
 
   public static class SqlCommand {
 
+    /**
+     * name 就是 MappedStatement中的id，即对应mapper.xml文件中的namespace+"."+方法名
+     */
     private final String name;
+    /**
+     * sql执行 类型 SELECT、DELETE等
+     */
     private final SqlCommandType type;
 
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
+      //NOTE: method所在的类
       final Class<?> declaringClass = method.getDeclaringClass();
+      //NOTE: 从configuration中获取MappedStatement并解析
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
@@ -253,12 +275,14 @@ public class MapperMethod {
 
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
+
       String statementId = mapperInterface.getName() + "." + methodName;
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
         return null;
       }
+      //NOTE: 层层往上，找父类的MappedStatement
       for (Class<?> superInterface : mapperInterface.getInterfaces()) {
         if (declaringClass.isAssignableFrom(superInterface)) {
           MappedStatement ms = resolveMappedStatement(superInterface, methodName,
@@ -272,6 +296,10 @@ public class MapperMethod {
     }
   }
 
+  /**
+   * 方法签名
+   * 解析方法返回值类型、参数列表等
+   */
   public static class MethodSignature {
 
     private final boolean returnsMany;
@@ -286,6 +314,7 @@ public class MapperMethod {
     private final ParamNameResolver paramNameResolver;
 
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
+      //NOTE: 通过反射解析方法返回类型
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;
@@ -298,10 +327,16 @@ public class MapperMethod {
       this.returnsMany = configuration.getObjectFactory().isCollection(this.returnType) || this.returnType.isArray();
       this.returnsCursor = Cursor.class.equals(this.returnType);
       this.returnsOptional = Optional.class.equals(this.returnType);
+      //NOTE: 解析 @MapKey 注解，获取注解内容
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
+      /*
+       * 获取 RowBounds 参数在参数列表中的位置，如果参数列表中
+       * 包含多个 RowBounds 参数，此方法会抛出异常
+       */
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
+      //NOTE: 解析参数列表
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 
@@ -358,6 +393,12 @@ public class MapperMethod {
       return returnsOptional;
     }
 
+    /**
+     * 若参数列表中出现多个 paramType的参数，则会报错。只能有一个
+     * @param method
+     * @param paramType
+     * @return
+     */
     private Integer getUniqueParamIndex(Method method, Class<?> paramType) {
       Integer index = null;
       final Class<?>[] argTypes = method.getParameterTypes();

@@ -92,12 +92,20 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.UnknownTypeHandler;
 
 /**
+ * NOTE：负责解析Mapper接口上的注解
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
 public class MapperAnnotationBuilder {
 
+  /**
+   * SQL 操作注解集合
+   */
   private static final Set<Class<? extends Annotation>> SQL_ANNOTATION_TYPES = new HashSet<>();
+
+  /**
+   * SQL 操作提供者注解集合
+   */
   private static final Set<Class<? extends Annotation>> SQL_PROVIDER_ANNOTATION_TYPES = new HashSet<>();
 
   private final Configuration configuration;
@@ -118,6 +126,7 @@ public class MapperAnnotationBuilder {
 
   public MapperAnnotationBuilder(Configuration configuration, Class<?> type) {
     String resource = type.getName().replace('.', '/') + ".java (best guess)";
+    //NOTE: 创建assistant辅助类
     this.assistant = new MapperBuilderAssistant(configuration, resource);
     this.configuration = configuration;
     this.type = type;
@@ -125,12 +134,16 @@ public class MapperAnnotationBuilder {
 
   public void parse() {
     String resource = type.toString();
+    //NOTE: 判断当前Mapper有没有被解析过？
     if (!configuration.isResourceLoaded(resource)) {
       loadXmlResource();
       configuration.addLoadedResource(resource);
       assistant.setCurrentNamespace(type.getName());
+      //解析 @CacheNamespace 注解
       parseCache();
+      //解析 @CacheNamespaceRef 注解
       parseCacheRef();
+      //执行解析每个方法的注解
       Method[] methods = type.getMethods();
       for (Method method : methods) {
         try {
@@ -161,10 +174,14 @@ public class MapperAnnotationBuilder {
     }
   }
 
+  /**
+   * 加载对应的 XML Mapper
+   */
   private void loadXmlResource() {
     // Spring may not know the real resource name so we check a flag
     // to prevent loading again a resource twice
     // this flag is set at XMLMapperBuilder#bindMapperForNamespace
+    //NOTE: 此处，是为了避免和 XMLMapperBuilder#parse() 方法冲突，重复解析
     if (!configuration.isResourceLoaded("namespace:" + type.getName())) {
       String xmlResource = type.getName().replace('.', '/') + ".xml";
       // #1347
@@ -184,6 +201,9 @@ public class MapperAnnotationBuilder {
     }
   }
 
+  /**
+   * 解析 @CacheNamespace 注解
+   */
   private void parseCache() {
     CacheNamespace cacheDomain = type.getAnnotation(CacheNamespace.class);
     if (cacheDomain != null) {
@@ -206,6 +226,9 @@ public class MapperAnnotationBuilder {
     return props;
   }
 
+  /**
+   * 解析 @CacheNamespaceRef 注解
+   */
   private void parseCacheRef() {
     CacheNamespaceRef cacheDomainRef = type.getAnnotation(CacheNamespaceRef.class);
     if (cacheDomainRef != null) {
@@ -296,11 +319,17 @@ public class MapperAnnotationBuilder {
     return null;
   }
 
+  /**
+   * 解析方法上的注解，创建MappedStatement
+   * @param method
+   */
   void parseStatement(Method method) {
     Class<?> parameterTypeClass = getParameterType(method);
     LanguageDriver languageDriver = getLanguageDriver(method);
+    //NOTE: 创建SqlSource
     SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
     if (sqlSource != null) {
+      //NOTE: 可选属性注解
       Options options = method.getAnnotation(Options.class);
       final String mappedStatementId = type.getName() + "." + method.getName();
       Integer fetchSize = null;
@@ -309,6 +338,7 @@ public class MapperAnnotationBuilder {
       ResultSetType resultSetType = null;
       SqlCommandType sqlCommandType = getSqlCommandType(method);
       boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
+      //NOTE: 不是select时才刷新缓存
       boolean flushCache = !isSelect;
       boolean useCache = isSelect;
 
@@ -353,6 +383,7 @@ public class MapperAnnotationBuilder {
         resultMapId = parseResultMap(method);
       }
 
+      //NOTE: 构建MappedStatement
       assistant.addMappedStatement(
           mappedStatementId,
           sqlSource,
@@ -463,8 +494,16 @@ public class MapperAnnotationBuilder {
     return returnType;
   }
 
+  /**
+   * 解析注解 创建SqlSource
+   * @param method
+   * @param parameterType
+   * @param languageDriver
+   * @return
+   */
   private SqlSource getSqlSourceFromAnnotations(Method method, Class<?> parameterType, LanguageDriver languageDriver) {
     try {
+      //获取对应的 SQL_ANNOTATION_TYPES 类型（select、insert、update、delete）
       Class<? extends Annotation> sqlAnnotationType = getSqlAnnotationType(method);
       Class<? extends Annotation> sqlProviderAnnotationType = getSqlProviderAnnotationType(method);
       if (sqlAnnotationType != null) {
@@ -484,7 +523,15 @@ public class MapperAnnotationBuilder {
     }
   }
 
+  /**
+   * 构建SqlSource
+   * @param strings
+   * @param parameterTypeClass
+   * @param languageDriver
+   * @return
+   */
   private SqlSource buildSqlSourceFromStrings(String[] strings, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+    //NOTE: 拼接SQL
     final StringBuilder sql = new StringBuilder();
     for (String fragment : strings) {
       sql.append(fragment);

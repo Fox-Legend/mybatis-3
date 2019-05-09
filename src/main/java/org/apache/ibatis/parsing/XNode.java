@@ -73,6 +73,10 @@ public class XNode {
     return builder.toString();
   }
 
+  /**
+   * 若节点未配置某属性，则用其他方式来生成一个形如: _
+   * @return
+   */
   public String getValueBasedIdentifier() {
     StringBuilder builder = new StringBuilder();
     XNode current = this;
@@ -86,8 +90,7 @@ public class XNode {
       if (value != null) {
         value = value.replace('.', '_');
         builder.insert(0, "]");
-        builder.insert(0,
-            value);
+        builder.insert(0, value);
         builder.insert(0, "[");
       }
       builder.insert(0, current.getName());

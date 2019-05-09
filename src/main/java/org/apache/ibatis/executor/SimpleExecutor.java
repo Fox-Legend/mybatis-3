@@ -58,8 +58,11 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      //NOTE: 创建StatementHandler（创建时会加载配置的拦截器Interceptor）
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      //NOTE: 创建Statement（和JDBC开始关联）
       stmt = prepareStatement(handler, ms.getStatementLog());
+      //NOTE: 调用StatementHandler来真正地执行SQL命令
       return handler.query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -82,8 +85,11 @@ public class SimpleExecutor extends BaseExecutor {
 
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
+    //NOTE: 创建JDBC Connection
     Connection connection = getConnection(statementLog);
+    //NOTE: 获取Statement
     stmt = handler.prepare(connection, transaction.getTimeout());
+    //NOTE: 参数设置
     handler.parameterize(stmt);
     return stmt;
   }

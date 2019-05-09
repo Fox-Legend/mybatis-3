@@ -26,24 +26,50 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * NOTE: 记录数据字段一列与Java对象中的一个属性之间建立的映射关系。
  * @author Clinton Begin
  */
 public class ResultMapping {
 
   private Configuration configuration;
+  /**
+   * 表示与column列进行映射的属性
+   */
   private String property;
+  /**
+   * 表示从数据库中得到的列名
+   */
   private String column;
+
+  /**
+   * 表示一个JavaBean的完全限定名
+   */
   private Class<?> javaType;
+
+  /**
+   * 表示进行映射的列column的JDBC类型
+   */
   private JdbcType jdbcType;
   private TypeHandler<?> typeHandler;
+  /**
+   * 主要用于多个resultMap之间进行关联，相当于join方法进行操作
+   */
   private String nestedResultMapId;
+
   private String nestedQueryId;
   private Set<String> notNullColumns;
   private String columnPrefix;
+
+  /**
+   * 处理后的标识：主要有id 和 CONSTRUCTOR
+   */
   private List<ResultFlag> flags;
   private List<ResultMapping> composites;
   private String resultSet;
   private String foreignColumn;
+  /**
+   * 是否懒加载，对应节点的fetchType属性
+   */
   private boolean lazy;
 
   ResultMapping() {

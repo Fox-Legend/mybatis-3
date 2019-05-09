@@ -29,6 +29,7 @@ import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * Mapper.xml 到 Sql Statement 封装类
  * @author Clinton Begin
  */
 public final class MappedStatement {
@@ -40,6 +41,9 @@ public final class MappedStatement {
   private Integer timeout;
   private StatementType statementType;
   private ResultSetType resultSetType;
+  /**
+   * sql语句
+   */
   private SqlSource sqlSource;
   private Cache cache;
   private ParameterMap parameterMap;
@@ -293,10 +297,18 @@ public final class MappedStatement {
     return resultSets;
   }
 
+  /**
+   * 获取执行sql语句
+   * BoundSql包含可执行的sql、参数列表、参数值
+   * @param parameterObject
+   * @return
+   */
   public BoundSql getBoundSql(Object parameterObject) {
+    //NOTE: 从对应sqlSource中获得BoundSql
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
+      //NOTE: 因为<ParameterMap/>节点已废弃，所以parameterMap.getParameterMappings()默认情况下为空
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 
@@ -304,6 +316,7 @@ public final class MappedStatement {
     for (ParameterMapping pm : boundSql.getParameterMappings()) {
       String rmId = pm.getResultMapId();
       if (rmId != null) {
+        //NOTE: 返回值Map
         ResultMap rm = configuration.getResultMap(rmId);
         if (rm != null) {
           hasNestedResultMaps |= rm.hasNestedResultMaps();

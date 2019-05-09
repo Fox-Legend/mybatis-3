@@ -41,14 +41,21 @@ public abstract class BaseStatementHandler implements StatementHandler {
   protected final Configuration configuration;
   protected final ObjectFactory objectFactory;
   protected final TypeHandlerRegistry typeHandlerRegistry;
+
+  //NOTE: 将结果集映射成结果对象
   protected final ResultSetHandler resultSetHandler;
+
+  //NOTE：为SQL语句绑定实参，也就是使用传入的实参替换SQL语句中的"？"占位符
   protected final ParameterHandler parameterHandler;
 
+  //NOTE: 记录执行SQL的Executor对象
   protected final Executor executor;
-  protected final MappedStatement mappedStatement;
-  protected final RowBounds rowBounds;
 
+  //NOTE: 记录SQL语句对应的MappedStatement和BoundSql
+  protected final MappedStatement mappedStatement;
   protected BoundSql boundSql;
+
+  protected final RowBounds rowBounds;
 
   protected BaseStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     this.configuration = mappedStatement.getConfiguration();
@@ -59,6 +66,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.objectFactory = configuration.getObjectFactory();
 
+    //NOTE: <1> 如果 boundSql 为空，一般是写类操作，例如：insert、update、delete ，则先获得自增主键，然后再创建 BoundSql 对象
     if (boundSql == null) { // issue #435, get the key before calculating the statement
       generateKeys(parameterObject);
       boundSql = mappedStatement.getBoundSql(parameterObject);
@@ -135,6 +143,10 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
   }
 
+  /**
+   * 创建自增主键
+   * @param parameter
+   */
   protected void generateKeys(Object parameter) {
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     ErrorContext.instance().store();

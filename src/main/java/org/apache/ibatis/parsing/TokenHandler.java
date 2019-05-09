@@ -16,6 +16,7 @@
 package org.apache.ibatis.parsing;
 
 /**
+ * 动态SQL 占位符替换或者实际参数替换
  * @author Clinton Begin
  */
 public interface TokenHandler {

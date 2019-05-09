@@ -28,6 +28,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * sql执行器
+ *
  * @author Clinton Begin
  */
 public interface Executor {
@@ -44,24 +46,53 @@ public interface Executor {
 
   List<BatchResult> flushStatements() throws SQLException;
 
+  /**
+   * 提交事务
+   */
   void commit(boolean required) throws SQLException;
 
+  /**
+   * 事务回滚
+   * @param required
+   * @throws SQLException
+   */
   void rollback(boolean required) throws SQLException;
 
+  /**
+   *  创建 CacheKey 对象
+   */
   CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql);
 
   boolean isCached(MappedStatement ms, CacheKey key);
 
   void clearLocalCache();
 
+  /**
+   *   延迟加载
+   */
   void deferLoad(MappedStatement ms, MetaObject resultObject, String property, CacheKey key, Class<?> targetType);
 
+  /**
+   * 获得事务
+   * @return
+   */
   Transaction getTransaction();
 
+  /**
+   * 关闭事务
+   */
   void close(boolean forceRollback);
 
+  /**
+   *  判断事务是否关闭
+   * @return
+   */
   boolean isClosed();
 
+  /**
+   * 设置包装的 Executor 对象
+   * @param executor
+   */
   void setExecutorWrapper(Executor executor);
 
 }

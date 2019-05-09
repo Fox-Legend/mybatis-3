@@ -23,6 +23,8 @@ import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.cache.CacheException;
 
 /**
+ * 基础的缓存实现类，一级缓存则是用改缓存实现类来缓存数据的
+ * @see org.apache.ibatis.executor.BaseExecutor
  * @author Clinton Begin
  */
 public class PerpetualCache implements Cache {

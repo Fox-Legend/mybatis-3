@@ -31,6 +31,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  */
 public class BeanWrapper extends BaseWrapper {
 
+
   private final Object object;
   private final MetaClass metaClass;
 
@@ -42,10 +43,14 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public Object get(PropertyTokenizer prop) {
+    //多路径，多个段（数组的格式）
     if (prop.getIndex() != null) {
+      //获得集合类型的属性
       Object collection = resolveCollection(prop, object);
+      // 获得指定位置的值
       return getCollectionValue(prop, collection);
     } else {
+      //不是数组格式的属性
       return getBeanProperty(prop, object);
     }
   }
@@ -90,6 +95,11 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  /**
+   * 获得指定属性的 getting 方法的返回值
+   * @param name
+   * @return
+   */
   @Override
   public Class<?> getGetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
@@ -98,6 +108,7 @@ public class BeanWrapper extends BaseWrapper {
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         return metaClass.getGetterType(name);
       } else {
+        //递归判断子表达式 children ，获得返回值的类型
         return metaValue.getGetterType(prop.getChildren());
       }
     } else {
@@ -157,6 +168,12 @@ public class BeanWrapper extends BaseWrapper {
     return metaValue;
   }
 
+  /**
+   * 反射调用get方法获取属性值
+   * @param prop
+   * @param object
+   * @return
+   */
   private Object getBeanProperty(PropertyTokenizer prop, Object object) {
     try {
       Invoker method = metaClass.getGetInvoker(prop.getName());
@@ -172,6 +189,12 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  /**
+   * 同getBeanProperty
+   * @param prop
+   * @param object
+   * @param value
+   */
   private void setBeanProperty(PropertyTokenizer prop, Object object, Object value) {
     try {
       Invoker method = metaClass.getSetInvoker(prop.getName());

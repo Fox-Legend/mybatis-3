@@ -497,7 +497,7 @@ SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environ
                 proxyFactory
               </td>
               <td>
-                指定 Mybatis 创建具有延迟加载能力的对象所用到的代理工具。
+                指定 jdbc.vs.Mybatis 创建具有延迟加载能力的对象所用到的代理工具。
               </td>
               <td>
                 CGLIB | JAVASSIST
@@ -1342,14 +1342,14 @@ public class ExampleTypeHandler extends BaseTypeHandler<String> {
         <p>
           当在 <code>ResultMap</code> 中决定使用哪种类型处理器时，此时 Java
           类型是已知的（从结果类型中获得），但是 JDBC 类型是未知的。
-	        因此 Mybatis 使用 <code>javaType=[Java 类型], jdbcType=null</code>
+	        因此 jdbc.vs.Mybatis 使用 <code>javaType=[Java 类型], jdbcType=null</code>
           的组合来选择一个类型处理器。
 	        这意味着使用 <code>@MappedJdbcTypes</code>
           注解可以<i>限制</i>类型处理器的范围，同时除非显式的设置，否则类型处理器在
           <code>ResultMap</code> 中将是无效的。
 	        如果希望在 <code>ResultMap</code> 中使用类型处理器，那么设置
           <code>@MappedJdbcTypes</code> 注解的 <code>includeNullJdbcType=true</code> 即可。
-	        然而从 Mybatis 3.4.0 开始，如果<b>只有一个</b>注册的类型处理器来处理 Java
+	        然而从 jdbc.vs.Mybatis 3.4.0 开始，如果<b>只有一个</b>注册的类型处理器来处理 Java
           类型，那么它将是 <code>ResultMap</code> 使用 Java
           类型时的默认值（即使没有 <code>includeNullJdbcType=true</code>）。
         </p>

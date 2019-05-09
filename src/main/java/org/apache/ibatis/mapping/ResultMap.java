@@ -43,7 +43,13 @@ public class ResultMap {
   private List<ResultMapping> idResultMappings;
   private List<ResultMapping> constructorResultMappings;
   private List<ResultMapping> propertyResultMappings;
+  /**
+   * 记录所有映射的列名
+   */
   private Set<String> mappedColumns;
+  /**
+   * 记录所有映射的JavaBean的属性
+   */
   private Set<String> mappedProperties;
   private Discriminator discriminator;
   private boolean hasNestedResultMaps;

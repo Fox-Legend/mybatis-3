@@ -33,6 +33,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 参数值关联处理Handler
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -61,29 +62,38 @@ public class DefaultParameterHandler implements ParameterHandler {
   @Override
   public void setParameters(PreparedStatement ps) {
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
+    //NOTE: 获取SQL片段对应的ParameterMapping（与每个#{xxx}占位符都会生成一个ParameterMapping对象）
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings != null) {
       for (int i = 0; i < parameterMappings.size(); i++) {
         ParameterMapping parameterMapping = parameterMappings.get(i);
         if (parameterMapping.getMode() != ParameterMode.OUT) {
+          //NOTE: 参数值
           Object value;
+          //NOTE: 参数名称
           String propertyName = parameterMapping.getProperty();
+
           if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) {
             value = null;
+            //NOTE: 若有对应JavaType的TypeHandler，则直接返回parameterObject，因为可以直接通过TypeHandler转化为对应的jdbcType
           } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
             value = parameterObject;
           } else {
+            //NOTE: 可能会是对象，然后找对应属性的值，或者是一个Map则找对应key的value
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
             value = metaObject.getValue(propertyName);
           }
+
+          //NOTE: 根据不同的typeHandler来设置参数值
           TypeHandler typeHandler = parameterMapping.getTypeHandler();
           JdbcType jdbcType = parameterMapping.getJdbcType();
           if (value == null && jdbcType == null) {
             jdbcType = configuration.getJdbcTypeForNull();
           }
           try {
+            //NOTE: 使用typeHandler 设置对应 ? 位置的具体参数值
             typeHandler.setParameter(ps, i + 1, value, jdbcType);
           } catch (TypeException | SQLException e) {
             throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);

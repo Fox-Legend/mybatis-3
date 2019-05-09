@@ -34,6 +34,9 @@ public final class OgnlCache {
 
   private static final OgnlMemberAccess MEMBER_ACCESS = new OgnlMemberAccess();
   private static final OgnlClassResolver CLASS_RESOLVER = new OgnlClassResolver();
+  /**
+   * ognl表达式缓存
+   */
   private static final Map<String, Object> expressionCache = new ConcurrentHashMap<>();
 
   private OgnlCache() {
@@ -42,7 +45,9 @@ public final class OgnlCache {
 
   public static Object getValue(String expression, Object root) {
     try {
+      //NOTE: 创建OgnlContext对象，OgnlClassResolver替代了OGNL中原有的DefaultClassResolver，其主要功能是通过Resources来定位资源
       Map context = Ognl.createDefaultContext(root, MEMBER_ACCESS, CLASS_RESOLVER, null);
+      //NOTE: 使用OGNL执行表达式
       return Ognl.getValue(parseExpression(expression), context, root);
     } catch (OgnlException e) {
       throw new BuilderException("Error evaluating expression '" + expression + "'. Cause: " + e, e);
@@ -52,6 +57,7 @@ public final class OgnlCache {
   private static Object parseExpression(String expression) throws OgnlException {
     Object node = expressionCache.get(expression);
     if (node == null) {
+      //NOTE: 缓存中没有对应数据，解析表达式并以experssion为key，解析结果为value缓存
       node = Ognl.parseExpression(expression);
       expressionCache.put(expression, node);
     }

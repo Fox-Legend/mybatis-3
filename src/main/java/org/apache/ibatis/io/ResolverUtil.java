@@ -88,7 +88,7 @@ public class ResolverUtil<T> {
 
     /** Returns true if type is assignable to the parent type supplied in the constructor. */
     @Override
-    public boolean matches(Class<?> type) {
+    public boolean matches(Class<?> type)  {
       return type != null && parent.isAssignableFrom(type);
     }
 

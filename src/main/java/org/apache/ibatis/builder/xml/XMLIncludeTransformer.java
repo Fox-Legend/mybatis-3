@@ -52,17 +52,22 @@ public class XMLIncludeTransformer {
 
   /**
    * Recursively apply includes through all SQL fragments.
+   * 处理<include>节点
    * @param source Include node in DOM tree
    * @param variablesContext Current context for static variables with values
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     if (source.getNodeName().equals("include")) {
+      //NOTE: 获取refid，并根据refid指向的<sql>获取对应的节点信息
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
+      //NOTE: 解析include中配置的属性key-value
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
+      //NOTE: 递归处理sql中也嵌套<include>的情况
       applyIncludes(toInclude, toIncludeContext, true);
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
+      //NOTE: 将<include>节点替换成<sql>节点
       source.getParentNode().replaceChild(toInclude, source);
       while (toInclude.hasChildNodes()) {
         toInclude.getParentNode().insertBefore(toInclude.getFirstChild(), toInclude);
@@ -99,6 +104,9 @@ public class XMLIncludeTransformer {
     }
   }
 
+  /**
+   * 获取对应name属性对应节点的值
+   */
   private String getStringAttribute(Node node, String name) {
     return node.getAttributes().getNamedItem(name).getNodeValue();
   }

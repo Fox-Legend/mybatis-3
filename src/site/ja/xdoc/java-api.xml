@@ -252,7 +252,7 @@ void commit(boolean force)
 void rollback()
 void rollback(boolean force)</source>
   <p>デフォルトでは、データベースが insert, update, delete メソッドの実行によって変更されない限り MyBatis は commit を実行しません。何らかの理由でこれらのメソッドを使わずにデータを変更した場合は確実にコミットされるように commit メソッドに引数 true を渡してください（ただし、auto-commit モードのセッションや外部のトランザクションマネージャーを使っている場合は true を渡してもコミットされません）。commit が実行されない場合、MyBatis がロールバックを実行するので、通常明示的に rollback() メソッドを呼び出す必要はありません。しかし、一つのセッションの中で複数のコミットやロールバックが必要とされるようなケースでは、rollback() メソッドを使ってより細かい制御を行うことが可能です。</p>
-  <p><span class="label important">NOTE</span> Mybatis-Spring と MyBatis-Guice では宣言的トランザクションがサポートされています。詳細は各サブプロジェクトのドキュメントを参照してください。</p>
+  <p><span class="label important">NOTE</span> jdbc.vs.Mybatis-Spring と MyBatis-Guice では宣言的トランザクションがサポートされています。詳細は各サブプロジェクトのドキュメントを参照してください。</p>
 
   <h5>ローカルキャッシュ</h5>
   <p>MyBatis は２種類の内部キャッシュを使用します。</p>

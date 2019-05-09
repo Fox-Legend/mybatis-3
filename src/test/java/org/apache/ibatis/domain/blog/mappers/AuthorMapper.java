@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.domain.blog.Author;
 import org.apache.ibatis.session.ResultHandler;
+import org.apache.ibatis.session.RowBounds;
 
 public interface AuthorMapper {
 
@@ -53,5 +55,7 @@ public interface AuthorMapper {
   int deleteAuthor(int id);
 
   int updateAuthor(Author author);
+
+  List<Author> testSelect(@Param("username") String username, RowBounds rowBounds, String password, ResultHandler handler);
 
 }

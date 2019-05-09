@@ -138,6 +138,10 @@ public class TypeAliasRegistry {
     }
   }
 
+  /**
+   * 解析别名情况1：未配置alias，若该类有Alias注解，则以注解的value为alias。
+   * @param type
+   */
   public void registerAlias(Class<?> type) {
     String alias = type.getSimpleName();
     Alias aliasAnnotation = type.getAnnotation(Alias.class);

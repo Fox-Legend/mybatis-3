@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright 2009-2018 the original author or authors.
+       Copyright 2009-2019 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -1385,7 +1385,7 @@ public class User {
               <td><code>notNullColumn</code></td>
               <td>
                 默认情况下，在至少一个被映射到属性的列不为空时，子对象才会被创建。
-                你可以在这个属性上指定非空的列来改变默认行为，指定后，Mybatis
+                你可以在这个属性上指定非空的列来改变默认行为，指定后，jdbc.vs.Mybatis
                 将只在这些列非空时才创建一个子对象。可以使用逗号分隔来指定多个列。默认值：未设置（unset）。
               </td>
             </tr>

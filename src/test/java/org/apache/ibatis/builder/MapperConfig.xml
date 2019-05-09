@@ -22,7 +22,9 @@
 
 <configuration>
 
-  <properties resource="org/apache/ibatis/databases/blog/blog-derby.properties"/>
+  <properties resource="org/apache/ibatis/databases/blog/blog-derby.properties">
+    <property name="username" value="root"/>
+  </properties>
 
   <settings>
     <setting name="cacheEnabled" value="true"/>
@@ -55,6 +57,7 @@
     <plugin interceptor="org.apache.ibatis.builder.ExamplePlugin">
       <property name="pluginProperty" value="100"/>
     </plugin>
+    <plugin interceptor="org.apache.ibatis.builder.ParameterPlugin"/>
   </plugins>
 
   <environments default="development">
@@ -73,10 +76,10 @@
 
   <mappers>
     <mapper resource="org/apache/ibatis/builder/AuthorMapper.xml"/>
-    <mapper resource="org/apache/ibatis/builder/BlogMapper.xml"/>
-    <mapper resource="org/apache/ibatis/builder/CachedAuthorMapper.xml"/>
-    <mapper resource="org/apache/ibatis/builder/PostMapper.xml"/>
-    <mapper resource="org/apache/ibatis/builder/NestedBlogMapper.xml"/>
+    <!--<mapper resource="org/apache/ibatis/builder/BlogMapper.xml"/>-->
+    <!--<mapper resource="org/apache/ibatis/builder/CachedAuthorMapper.xml"/>-->
+    <!--<mapper resource="org/apache/ibatis/builder/PostMapper.xml"/>-->
+    <!--<mapper resource="org/apache/ibatis/builder/NestedBlogMapper.xml"/>-->
   </mappers>
 
 </configuration>

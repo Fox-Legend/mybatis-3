@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.ExceptionUtil;
 import org.apache.ibatis.session.SqlSession;
 
 /**
+ * Mapper接口 SQL语句执行代理类
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -35,6 +36,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   private static final long serialVersionUID = -6424540398559729838L;
   private final SqlSession sqlSession;
   private final Class<T> mapperInterface;
+  //NOTE: 缓存MapperMethod对象，key为接口中方法对应的Method对象，value是对应的MapperMethod对象
   private final Map<Method, MapperMethod> methodCache;
 
   public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
@@ -46,6 +48,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
+      //NOTE: 如果目标方法继承自Object,则直接调用目标方法
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else if (isDefaultMethod(method)) {
@@ -54,7 +57,9 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);
     }
+    //NOTE: 从缓存中获取MapperMethod对象，若没有则新创建并加入缓存
     final MapperMethod mapperMethod = cachedMapperMethod(method);
+    //NOTE: 调用MapperMethod.execute方法执行SQl语句
     return mapperMethod.execute(sqlSession, args);
   }
 

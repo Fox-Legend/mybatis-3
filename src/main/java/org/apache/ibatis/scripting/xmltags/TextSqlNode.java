@@ -23,6 +23,7 @@ import org.apache.ibatis.scripting.ScriptingException;
 import org.apache.ibatis.type.SimpleTypeRegistry;
 
 /**
+ * 包含"${}"占位符的动态SQL节点
  * @author Clinton Begin
  */
 public class TextSqlNode implements SqlNode {
@@ -38,8 +39,13 @@ public class TextSqlNode implements SqlNode {
     this.injectionFilter = injectionFilter;
   }
 
+  /**
+   * 判断sql是否为动态的
+   * @return
+   */
   public boolean isDynamic() {
     DynamicCheckerTokenParser checker = new DynamicCheckerTokenParser();
+    //NOTE: ${} 占位符解析器
     GenericTokenParser parser = createParser(checker);
     parser.parse(text);
     return checker.isDynamic();

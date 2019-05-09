@@ -34,12 +34,21 @@ public class DynamicContext {
   public static final String PARAMETER_OBJECT_KEY = "_parameter";
   public static final String DATABASE_ID_KEY = "_databaseId";
 
+  /**
+   * 设置 OGNL 的属性访问器
+   */
   static {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
+  /**
+   * 上下文的参数集合
+   */
   private final ContextMap bindings;
   private final StringJoiner sqlBuilder = new StringJoiner(" ");
+  /**
+   * 唯一编号。在 {@link org.apache.ibatis.scripting.xmltags.XMLScriptBuilder.ForEachHandler} 使用
+   */
   private int uniqueNumber = 0;
 
   public DynamicContext(Configuration configuration, Object parameterObject) {

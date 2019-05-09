@@ -30,13 +30,29 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * NOTE: XML 动态语句构建器，负责将SQL解析成SqlSource对象
  * @author Clinton Begin
  */
 public class XMLScriptBuilder extends BaseBuilder {
 
+  /**
+   * 当前 SQL 的 XNode 对象
+   */
   private final XNode context;
+
+  /**
+   * 是否为动态sql
+   */
   private boolean isDynamic;
+
+  /**
+   * 方法参数类型
+   */
   private final Class<?> parameterType;
+
+  /**
+   * NodeHandler映射集合
+   */
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
 
   public XMLScriptBuilder(Configuration configuration, XNode context) {
@@ -64,6 +80,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   public SqlSource parseScriptNode() {
+    //NOTE: 嵌套Sql解析，形成一个个的SQL 片段，并存放到MixedSqlNode中
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource;
     if (isDynamic) {
@@ -74,22 +91,34 @@ public class XMLScriptBuilder extends BaseBuilder {
     return sqlSource;
   }
 
+  /**
+   * 解析节点，将每个SQL片段存放到MixedSqlNode中
+   * @param node
+   * @return
+   */
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
+    //NOTE: 遍历子节点
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       XNode child = node.newXNode(children.item(i));
+      //NOTE: 分支1：如果类型是 Node.CDATA_SECTION_NODE 或者 Node.TEXT_NODE 时
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
+        //NOTE: 获取文本
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
+        //NOTE: 判断是否为动态sql，若其中包含"${}"，则表示为动态sql
         if (textSqlNode.isDynamic()) {
           contents.add(textSqlNode);
           isDynamic = true;
         } else {
           contents.add(new StaticTextSqlNode(data));
         }
-      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
+      }
+      //NOTE: child 节点是 ELEMENT_NODE 类型，比如 <if>、<where> 等
+      else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) {
         String nodeName = child.getNode().getNodeName();
+        //NOTE: 获取对应的NodeHandler，生成相应的 SqlNode
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
@@ -98,6 +127,7 @@ public class XMLScriptBuilder extends BaseBuilder {
         isDynamic = true;
       }
     }
+    //NOTE: 将各种sql片段保存到MixedSqlNode中
     return new MixedSqlNode(contents);
   }
 

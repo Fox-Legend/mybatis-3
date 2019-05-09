@@ -99,8 +99,14 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  */
 public class Configuration {
 
+  /**
+   * 环境配置
+   */
   protected Environment environment;
 
+  /**
+   * 全局配置属性
+   */
   protected boolean safeRowBoundsEnabled;
   protected boolean safeResultHandlerEnabled = true;
   protected boolean mapUnderscoreToCamelCase;
@@ -110,6 +116,10 @@ public class Configuration {
   protected boolean useColumnLabel = true;
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
+  /**
+   * 允许使用方法签名中的名称作为语句参数名称。
+   * 为了使用该特性，项目必须采用 Java 8 编译，并且加上 -parameters 选项
+   */
   protected boolean useActualParamName = true;
   protected boolean returnInstanceForEmptyRow;
 
@@ -121,6 +131,9 @@ public class Configuration {
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
   protected Integer defaultStatementTimeout;
   protected Integer defaultFetchSize;
+  /**
+   * 语句执行，默认simple，表示不复用缓存，每次重新编译执行
+   */
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
@@ -142,24 +155,58 @@ public class Configuration {
    */
   protected Class<?> configurationFactory;
 
+  /**
+   * Mapper 注册，保存Mapper接口与代理类关系
+   */
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  /**
+   * 插件拦截器链
+   */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+
+  /**
+   * TypeHandler注册器
+   */
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+
+  /**
+   * TypeAlias 注册器
+   */
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+
+  /**
+   *
+   */
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
       .conflictMessageProducer((savedValue, targetValue) ->
           ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
+
+
+  /**
+   * 二级缓存
+   */
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
+  /**
+   * <resultMap> 配置数据缓存
+   */
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
+
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
   protected final Set<String> loadedResources = new HashSet<>();
+  /**
+   * 记录<sql>节点的信息
+   */
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
+
+  /**
+   * 未完成解析的CacheRef，将在mapper文件解析完之后再解析
+   */
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<>();
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<>();
   protected final Collection<MethodResolver> incompleteMethods = new LinkedList<>();
@@ -550,6 +597,7 @@ public class Configuration {
 
   public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
     ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    //NOTE: 添加到拦截器中，并生成代理对象
     parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
     return parameterHandler;
   }
@@ -561,6 +609,16 @@ public class Configuration {
     return resultSetHandler;
   }
 
+  /**
+   * 创建StatementHandler 并增加拦截器
+   * @param executor
+   * @param mappedStatement
+   * @param parameterObject
+   * @param rowBounds
+   * @param resultHandler
+   * @param boundSql
+   * @return
+   */
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
@@ -571,7 +629,14 @@ public class Configuration {
     return newExecutor(transaction, defaultExecutorType);
   }
 
+  /**
+   * 创建Executor
+   * @param transaction
+   * @param executorType 不同的executorType创建不同的Executor
+   * @return
+   */
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    //NOTE: defaultExecutorType为SIMPLE
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
     Executor executor;
@@ -582,6 +647,7 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    //NOTE: 若开启缓存，则采用装饰器模式，将真正的executor包装在CachingExecutor中
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
@@ -771,7 +837,8 @@ public class Configuration {
     cacheRefMap.put(namespace, referencedNamespace);
   }
 
-  /*
+  /**
+   * 对未完成的解析进行再次解析并从incomplete集合中删除
    * Parses all the unprocessed statement nodes in the cache. It is recommended
    * to call this method once all the mappers are added as it provides fail-fast
    * statement validation.
@@ -901,6 +968,7 @@ public class Configuration {
 
     /**
      * Assign a function for producing a conflict error message when contains value with the same key.
+     * 若存在相同的key 时，返回错误信息
      * <p>
      * function arguments are 1st is saved value and 2nd is target value.
      * @param conflictMessageProducer A function for producing a conflict error message
@@ -914,15 +982,19 @@ public class Configuration {
 
     @SuppressWarnings("unchecked")
     public V put(String key, V value) {
+      //NOTE: 若key已经存在则会保错
       if (containsKey(key)) {
         throw new IllegalArgumentException(name + " already contains value for " + key
             + (conflictMessageProducer == null ? "" : conflictMessageProducer.apply(super.get(key), value)));
       }
+      //NOTE: 将key按照"."拆分，取数组最后一个string为key
       if (key.contains(".")) {
         final String shortKey = getShortName(key);
         if (super.get(shortKey) == null) {
+          //不存在则调用HashMap原生的方法进行保存
           super.put(shortKey, value);
         } else {
+          //NOTE: 若已经存在，则封装成Ambiguity再保存(存在的情况为：包路径不同，但Mapper接口名称一样): shortKey存在二义性
           super.put(shortKey, (V) new Ambiguity(shortKey));
         }
       }

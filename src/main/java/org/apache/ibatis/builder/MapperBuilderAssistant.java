@@ -49,11 +49,16 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 /**
+ * XMLMapperBuilder 辅助类
+ * NOTE: 构建ResultMap、ParameterMapping解析映射、缓存配置、jdbcType to javaType转换、当前命名空间管理等
  * @author Clinton Begin
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
   private String currentNamespace;
+  /**
+   * Mapper文件资源的全路径名
+   */
   private final String resource;
   private Cache currentCache;
   private boolean unresolvedCacheRef; // issue #676
@@ -120,6 +125,19 @@ public class MapperBuilderAssistant extends BaseBuilder {
     }
   }
 
+  /**
+   * 创建Cache对象并将cache保存到Configuration的caches集合中
+   * NOTE: key = 映射文件的namespace、value = Cache(二级缓存)
+   *
+   * @param typeClass 缓存类
+   * @param evictionClass 缓存数据淘汰策略
+   * @param flushInterval 刷新间隔
+   * @param size
+   * @param readWrite
+   * @param blocking
+   * @param props
+   * @return
+   */
   public Cache useNewCache(Class<? extends Cache> typeClass,
       Class<? extends Cache> evictionClass,
       Long flushInterval,
@@ -172,6 +190,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .build();
   }
 
+  /**
+   * NOTE: 封装ResultMap，记录在Configuration的resultMaps中，
+   * NOTE: key为currentNamespace+id属性，value为ResultMap（包含所有ResultMapping等信息）
+   * @param id
+   * @param type
+   * @param extend
+   * @param discriminator
+   * @param resultMappings
+   * @param autoMapping
+   * @return
+   */
   public ResultMap addResultMap(
       String id,
       Class<?> type,
@@ -240,6 +269,11 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return new Discriminator.Builder(configuration, resultMapping, namespaceDiscriminatorMap).build();
   }
 
+  /**
+   * 创建MappedStatement，记录到Configuration的mappedStatements中
+   * NOTE: key=currentNamespace+"."+id； value=MappedStatement
+   * @return
+   */
   public MappedStatement addMappedStatement(
       String id,
       SqlSource sqlSource,
@@ -324,13 +358,22 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return parameterMap;
   }
 
+  /**
+   * 获得 ResultMap 集合
+   * @param resultMap
+   * @param resultType
+   * @param statementId
+   * @return
+   */
   private List<ResultMap> getStatementResultMaps(
       String resultMap,
       Class<?> resultType,
       String statementId) {
+    //NOTE: 补全resultMap的全限定名
     resultMap = applyCurrentNamespace(resultMap, true);
 
     List<ResultMap> resultMaps = new ArrayList<>();
+    //NOTE: 有配置resultMap属性，配置多个时，以'，'分开，并从configuration中找到对应的ResultMap
     if (resultMap != null) {
       String[] resultMapNames = resultMap.split(",");
       for (String resultMapName : resultMapNames) {
@@ -416,6 +459,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return composites;
   }
 
+  /**
+   * 数据库查询结果，resultType转换为JavaType
+   * @param resultType
+   * @param property
+   * @param javaType
+   * @return
+   */
   private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
     if (javaType == null && property != null) {
       try {

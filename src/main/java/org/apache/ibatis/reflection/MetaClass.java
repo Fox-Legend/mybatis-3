@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.invoker.MethodInvoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 类的元数据，基于 Reflector 和 PropertyTokenizer ，提供对指定类的各种骚操作。
  * @author Clinton Begin
  */
 public class MetaClass {
@@ -53,8 +54,15 @@ public class MetaClass {
     return prop.length() > 0 ? prop.toString() : null;
   }
 
+  /**
+   * 根据表达式，获得属性
+   * @param name
+   * @param useCamelCaseMapping
+   * @return
+   */
   public String findProperty(String name, boolean useCamelCaseMapping) {
     if (useCamelCaseMapping) {
+      //下划线转驼峰
       name = name.replace("_", "");
     }
     return findProperty(name);

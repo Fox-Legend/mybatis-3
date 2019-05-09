@@ -232,6 +232,8 @@ class PooledConnection implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
+    // TODO: 2019/3/13 此处的close方法的处理，设计很巧妙，原始connection需要主动调用close方法来关闭连接，
+    // TODO            而这里使用的是连接池，需要将它放在连接池，此处设计不改变使用者的习惯close，利用代理方法来管理connection
     if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
       dataSource.pushConnection(this);
       return null;

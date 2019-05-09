@@ -39,12 +39,28 @@ import org.apache.ibatis.reflection.SystemMetaObject;
  */
 public class CacheBuilder {
   private final String id;
+  /**
+   * Cache接口的真正实现类，默认值是PerpetualCache
+   */
   private Class<? extends Cache> implementation;
+  /**
+   * 装饰器集合，默认只包含LruCache
+   */
   private final List<Class<? extends Cache>> decorators;
+  /**
+   * 缓存大小
+   */
   private Integer size;
+  /**
+   * 缓存清理周期
+   */
   private Long clearInterval;
+
   private boolean readWrite;
   private Properties properties;
+  /**
+   * 是否阻塞
+   */
   private boolean blocking;
 
   public CacheBuilder(String id) {
@@ -89,9 +105,15 @@ public class CacheBuilder {
     return this;
   }
 
+  /**
+   * 创建Cache对象，并添加装饰器
+   * @return
+   */
   public Cache build() {
     setDefaultImplementations();
+    //NOTE: 根据Cache具体实现类implementation，通过反射创建Cache对象（默认是PerpetualCache）
     Cache cache = newBaseCacheInstance(implementation, id);
+    //NOTE: 根据<cache>节点下的配置信息，初始化Cache对象
     setCacheProperties(cache);
     // issue #352, do not apply decorators to custom caches
     if (PerpetualCache.class.equals(cache.getClass())) {
@@ -99,6 +121,7 @@ public class CacheBuilder {
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
+      //添加标准的装饰器
       cache = setStandardDecorators(cache);
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
       cache = new LoggingCache(cache);
@@ -106,15 +129,23 @@ public class CacheBuilder {
     return cache;
   }
 
+
   private void setDefaultImplementations() {
     if (implementation == null) {
+      //NOTE: 默认缓存实现为PerpetualCache
       implementation = PerpetualCache.class;
+      //NOTE: 缓存装饰器，默认为：LruCache
       if (decorators.isEmpty()) {
         decorators.add(LruCache.class);
       }
     }
   }
 
+  /**
+   * NOTE: 将cache作为被装饰者记录到对应装饰器内部，在调用时，先调用装饰器，然后再装饰器内部调用真正的Cache
+   * @param cache
+   * @return
+   */
   private Cache setStandardDecorators(Cache cache) {
     try {
       MetaObject metaCache = SystemMetaObject.forObject(cache);
