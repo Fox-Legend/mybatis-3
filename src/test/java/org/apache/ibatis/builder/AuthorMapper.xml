@@ -22,9 +22,9 @@
 
 <mapper namespace="org.apache.ibatis.domain.blog.mappers.AuthorMapper">
 
-	<parameterMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author">
-		<parameter property="id" />
-	</parameterMap>
+	<!--<parameterMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author">-->
+		<!--<parameter property="id" />-->
+	<!--</parameterMap>-->
 
 	<resultMap id="selectAuthor" type="org.apache.ibatis.domain.blog.Author">
 		<id column="id" property="id" />
@@ -39,10 +39,11 @@
 		id, username, password, email, bio, favourite_section
 	</sql>
 
+
 	<select id="testSelect" resultMap="selectAuthor">
 		SELECT
 		<include refid="Base_Column"/>
-		FROM author where username = #{username} and password = #{param2}
+		FROM author where username = #{username}
 	</select>
 
 	<!--<resultMap id="selectImmutableAuthor" type="org.apache.ibatis.domain.blog.ImmutableAuthor">-->
@@ -104,10 +105,10 @@
 		<!--select id, username from author where id = #{value}-->
 	<!--</select>-->
 
-	<select id="selectAuthor" parameterMap="selectAuthor" resultMap="selectAuthor">
-		select id, username, password, email, bio, favourite_section
-		from author where id = ?
-	</select>
+	<!--<select id="selectAuthor" parameterMap="selectAuthor" resultMap="selectAuthor">-->
+		<!--select id, username, password, email, bio, favourite_section-->
+		<!--from author where id = ?-->
+	<!--</select>-->
 
 	<!--<select id="selectImmutableAuthor" parameterMap="selectAuthor"-->
 		<!--resultMap="selectImmutableAuthor">-->
@@ -140,7 +141,7 @@
 	<!--</delete>-->
 
 
-	<!--<update id="updateAuthorIfNecessary" parameterType="org.apache.ibatis.domain.blog.Author">-->
+	<!--<update id="updateAuthorIfNecessary" parameterType="org.apache.ibatis.domain.blog.Author" useGeneratedKeys="true">-->
 		<!--update Author-->
 		<!--<set>-->
 			<!--<if test="username != null">username=#{username},</if>-->

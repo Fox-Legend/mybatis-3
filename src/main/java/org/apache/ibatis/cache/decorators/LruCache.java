@@ -28,10 +28,19 @@ import org.apache.ibatis.cache.Cache;
  */
 public class LruCache implements Cache {
 
+  //NOTE: 被装饰缓存类
   private final Cache delegate;
+
+  //NOTE: 记录缓存的key，作用是：在调用getObject时触发调整LinkedHashMap节点的顺序。
   private Map<Object, Object> keyMap;
+
+  //NOTE: 应该被剔除的缓存key
   private Object eldestKey;
 
+  /**
+   * 默认缓存大小为1024
+   * @param delegate
+   */
   public LruCache(Cache delegate) {
     this.delegate = delegate;
     setSize(1024);
@@ -51,9 +60,11 @@ public class LruCache implements Cache {
     keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) {
       private static final long serialVersionUID = 4267176411845948333L;
 
+      //NOTE: 该方法会在调用Map的get方法时被调用
       @Override
       protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
         boolean tooBig = size() > size;
+        //NOTE: 若当前put数据后，大小大于默认值，则记录需要被删除的key，在下次put数据时会删掉这个数据
         if (tooBig) {
           eldestKey = eldest.getKey();
         }
@@ -65,12 +76,14 @@ public class LruCache implements Cache {
   @Override
   public void putObject(Object key, Object value) {
     delegate.putObject(key, value);
+    //NOTE: 删除需要删除的缓存节点
     cycleKeyList(key);
   }
 
   @Override
   public Object getObject(Object key) {
-    keyMap.get(key); //touch
+    //NOTE: keyMap.get(key)，目的是刷新 key 对应的键值对在 LinkedHashMap 的位置
+    keyMap.get(key);
     return delegate.getObject(key);
   }
 

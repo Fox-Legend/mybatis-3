@@ -60,9 +60,8 @@ class SqlSessionTest extends BaseDataTest {
     void testSelect() throws Exception {
         try (SqlSession sqlSession = sqlMapper.openSession()) {
             AuthorMapper authorMapper = sqlSession.getMapper(AuthorMapper.class);
-            RowBounds rowBounds = new RowBounds();
-            ResultHandler handler = new DefaultResultHandler();
-            System.out.println(authorMapper.testSelect("jim", rowBounds, "********", handler));
+            RowBounds rowBounds = new RowBounds(0, 20);
+            System.out.println(authorMapper.testSelect("jim", rowBounds));
         }
     }
 

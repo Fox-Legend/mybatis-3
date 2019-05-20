@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
+ * 封装被拦截 信息，并提供拦截逻辑后回归到原始方法的方法proceed
  * @author Clinton Begin
  */
 public class Invocation {

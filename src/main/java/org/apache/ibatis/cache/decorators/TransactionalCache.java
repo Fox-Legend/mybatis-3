@@ -40,9 +40,16 @@ public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
 
+  //被装饰缓存对象
   private final Cache delegate;
   private boolean clearOnCommit;
+  /**
+   * 事务提交前，所有数据库查询的结果将缓存在该集合中
+   */
   private final Map<Object, Object> entriesToAddOnCommit;
+  /**
+   * 事务被提交前，当缓存未命中时，CacheKey 将会被存储在此集合中
+   */
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -67,6 +74,7 @@ public class TransactionalCache implements Cache {
     // issue #116
     Object object = delegate.getObject(key);
     if (object == null) {
+      //NOTE: 缓存未命中，记录key
       entriesMissedInCache.add(key);
     }
     // issue #146
@@ -98,6 +106,9 @@ public class TransactionalCache implements Cache {
     entriesToAddOnCommit.clear();
   }
 
+  /**
+   * 事务提交
+   */
   public void commit() {
     if (clearOnCommit) {
       delegate.clear();
@@ -121,6 +132,7 @@ public class TransactionalCache implements Cache {
     for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
       delegate.putObject(entry.getKey(), entry.getValue());
     }
+    //NOTE: 事务提交后，若未命中缓存则添加
     for (Object entry : entriesMissedInCache) {
       if (!entriesToAddOnCommit.containsKey(entry)) {
         delegate.putObject(entry, null);

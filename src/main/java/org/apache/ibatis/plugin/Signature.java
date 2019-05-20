@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 拦截对象：哪个类，哪个方法，参数？
  * @author Clinton Begin
  */
 @Documented

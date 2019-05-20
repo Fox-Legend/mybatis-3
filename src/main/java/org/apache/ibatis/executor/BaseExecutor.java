@@ -65,6 +65,7 @@ public abstract class BaseExecutor implements Executor {
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
     this.transaction = transaction;
     this.deferredLoads = new ConcurrentLinkedQueue<>();
+    //NOTE: 一级缓存默认使用PerpetualCache缓存类
     this.localCache = new PerpetualCache("LocalCache");
     this.localOutputParameterCache = new PerpetualCache("LocalOutputParameterCache");
     this.closed = false;
@@ -151,11 +152,13 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
-      //NOTE: 若当前sql执行过，则直接从缓存中获取对应的结果
+      //NOTE: 一级缓存中是否缓存了对应sql？
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
+        //NOTE: 一级缓存中有数据，则返回
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        //NOTE: 一级缓存中没有则查询数据库
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -200,9 +203,12 @@ public abstract class BaseExecutor implements Executor {
       throw new ExecutorException("Executor was closed.");
     }
     CacheKey cacheKey = new CacheKey();
+    //NOTE: 记录MappedStatement id
     cacheKey.update(ms.getId());
+    //NOTE: 记录指定查询结果集的范围
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());
+    //NOTE: 查询所使用的SQL语句
     cacheKey.update(boundSql.getSql());
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
@@ -221,6 +227,7 @@ public abstract class BaseExecutor implements Executor {
           MetaObject metaObject = configuration.newMetaObject(parameterObject);
           value = metaObject.getValue(propertyName);
         }
+        //NOTE: 记录用户传入的实参值
         cacheKey.update(value);
       }
     }

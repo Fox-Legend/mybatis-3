@@ -56,6 +56,6 @@ public interface AuthorMapper {
 
   int updateAuthor(Author author);
 
-  List<Author> testSelect(@Param("username") String username, RowBounds rowBounds, String password, ResultHandler handler);
+  List<Author> testSelect(@Param("username") String username, RowBounds rowBounds);
 
 }

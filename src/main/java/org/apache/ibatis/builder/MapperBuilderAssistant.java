@@ -60,7 +60,11 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * Mapper文件资源的全路径名
    */
   private final String resource;
+  /**
+   * 配置的缓存
+   */
   private Cache currentCache;
+
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -129,8 +133,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * 创建Cache对象并将cache保存到Configuration的caches集合中
    * NOTE: key = 映射文件的namespace、value = Cache(二级缓存)
    *
-   * @param typeClass 缓存类
-   * @param evictionClass 缓存数据淘汰策略
+   * @param typeClass 缓存类 默认PERPETUAL
+   * @param evictionClass 缓存数据淘汰策略 默认LRUCache
    * @param flushInterval 刷新间隔
    * @param size
    * @param readWrite
@@ -296,6 +300,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       LanguageDriver lang,
       String resultSets) {
 
+    //等着缓存配置解析完成（配置了cacheRef）
     if (unresolvedCacheRef) {
       throw new IncompleteElementException("Cache-ref not yet resolved");
     }
@@ -395,6 +400,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return resultMaps;
   }
 
+  /**
+   * 构建ResultMapping对象
+   */
   public ResultMapping buildResultMapping(
       Class<?> resultType,
       String property,
@@ -444,6 +452,11 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return columns;
   }
 
+  /**
+   * 解析column配置多个属性时，需要被解析为多个ResultMapping
+   * @param columnName
+   * @return
+   */
   private List<ResultMapping> parseCompositeColumnName(String columnName) {
     List<ResultMapping> composites = new ArrayList<>();
     if (columnName != null && (columnName.indexOf('=') > -1 || columnName.indexOf(',') > -1)) {

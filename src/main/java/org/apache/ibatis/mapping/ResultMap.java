@@ -44,7 +44,7 @@ public class ResultMap {
   private List<ResultMapping> constructorResultMappings;
   private List<ResultMapping> propertyResultMappings;
   /**
-   * 记录所有映射的列名
+   * 记录所有映射的列名,对应<columns/>节点里的column属性
    */
   private Set<String> mappedColumns;
   /**

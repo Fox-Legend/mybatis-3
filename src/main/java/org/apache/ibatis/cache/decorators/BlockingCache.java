@@ -31,6 +31,9 @@ import org.apache.ibatis.cache.CacheException;
  * It sets a lock over a cache key when the element is not found in cache.
  * This way, other threads will wait until this element is filled instead of hitting the database.
  *
+ * 当指定的key对应元素不在缓存中，BlockingCache会根据Lock进行加锁。
+ * 此时其他的线程处于等待状态，直到key对应的数据被填充到缓存中，而不是让所有线程都去访问数据库。
+ *
  * @author Eduardo Macarron
  *
  */

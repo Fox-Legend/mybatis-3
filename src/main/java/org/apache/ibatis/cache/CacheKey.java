@@ -23,6 +23,7 @@ import java.util.StringJoiner;
 import org.apache.ibatis.reflection.ArrayUtil;
 
 /**
+ * 缓存key
  * @author Clinton Begin
  */
 public class CacheKey implements Cloneable, Serializable {
@@ -39,6 +40,7 @@ public class CacheKey implements Cloneable, Serializable {
   private long checksum;
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
+  //NOTE: 将会包含MappedStatement的id、指定查询结果集的范围、查询所使用的SQL语句、用户传递的实际参数值
   private List<Object> updateList;
 
   public CacheKey() {
@@ -85,10 +87,11 @@ public class CacheKey implements Cloneable, Serializable {
     }
 
     final CacheKey cacheKey = (CacheKey) object;
-
+    //NOTE: hashcode是否相同
     if (hashcode != cacheKey.hashcode) {
       return false;
     }
+    //NOTE: 
     if (checksum != cacheKey.checksum) {
       return false;
     }

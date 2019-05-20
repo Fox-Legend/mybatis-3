@@ -18,14 +18,30 @@ package org.apache.ibatis.plugin;
 import java.util.Properties;
 
 /**
+ * 插件 拦截器
  * @author Clinton Begin
  */
 public interface Interceptor {
 
+  /**
+   * 拦截 逻辑处理
+   * @param invocation
+   * @return
+   * @throws Throwable
+   */
   Object intercept(Invocation invocation) throws Throwable;
 
+  /**
+   * 拦截器绑定
+   * @param target
+   * @return
+   */
   Object plugin(Object target);
 
+  /**
+   * 属性添加
+   * @param properties
+   */
   void setProperties(Properties properties);
 
 }

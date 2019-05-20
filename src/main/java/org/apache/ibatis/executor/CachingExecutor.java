@@ -39,6 +39,10 @@ import org.apache.ibatis.transaction.Transaction;
 public class CachingExecutor implements Executor {
 
   private final Executor delegate;
+  /**
+   * 缓存事务管理：因为MappedStatement是全局属性，使用其缓存实例会有线程安全问题。会出现多个事务共用一个缓存实例的情况导致脏数据。
+   * 所以线程安全可以用SynchronizedCache来解决，多事务问题用TransactionalCacheManager来解决。
+   */
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
   public CachingExecutor(Executor delegate) {
@@ -94,20 +98,24 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
+    //NOTE: 是否配置了二级缓存
     Cache cache = ms.getCache();
     if (cache != null) {
       flushCacheIfRequired(ms);
+      //NOTE: 当前执行Statement语句是否开启了缓存useCache=true
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
+          //NOTE: 未命中缓存则通过被装饰executor对象delegate发起查询--BaseExecutor
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
-          tcm.putObject(cache, key, list); // issue #578 and #116
+          tcm.putObject(cache, key, list);
         }
         return list;
       }
     }
+    //NOTE: 没有配置二级缓存，则通过被装饰executor对象delegate发起查询--BaseExecutor
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 

@@ -57,7 +57,7 @@
     <plugin interceptor="org.apache.ibatis.builder.ExamplePlugin">
       <property name="pluginProperty" value="100"/>
     </plugin>
-    <plugin interceptor="org.apache.ibatis.builder.ParameterPlugin"/>
+    <!--<plugin interceptor="org.apache.ibatis.builder.ParameterPlugin"/>-->
   </plugins>
 
   <environments default="development">

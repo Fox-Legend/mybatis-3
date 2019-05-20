@@ -42,13 +42,16 @@ public class Plugin implements InvocationHandler {
   }
 
   /**
-   * 创建代理对象
+   * 封装被代理对象，创建代理对象
    * @param target
    * @param interceptor
    * @return
    */
   public static Object wrap(Object target, Interceptor interceptor) {
+    //NOTE: 获取拦截器上定义的被拦截类和具体的方法签名信息
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
+
+    //NOTE: 被拦截类
     Class<?> type = target.getClass();
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
@@ -75,6 +78,11 @@ public class Plugin implements InvocationHandler {
     }
   }
 
+  /**
+   * 解析配置的被拦截对象
+   * @param interceptor
+   * @return key = 拦截类，value = 方法列表
+   */
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     // issue #251

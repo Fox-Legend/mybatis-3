@@ -22,6 +22,7 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * resultMapping 数据鉴别器
+ * 就是在<resultMap>中 根据某个case指定结果映射应该用哪个ResultMap
  * @author Clinton Begin
  */
 public class Discriminator {

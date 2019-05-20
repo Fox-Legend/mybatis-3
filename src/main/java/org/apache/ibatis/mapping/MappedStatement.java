@@ -42,9 +42,12 @@ public final class MappedStatement {
   private StatementType statementType;
   private ResultSetType resultSetType;
   /**
-   * sql语句
+   * sql片段集
    */
   private SqlSource sqlSource;
+  /**
+   * 记录缓存对象（二级缓存）
+   */
   private Cache cache;
   private ParameterMap parameterMap;
   private List<ResultMap> resultMaps;
