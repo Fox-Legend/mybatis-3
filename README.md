@@ -1,3 +1,7 @@
+1. 源码学习思路整理，关键点注解
+
+2. MyBatis官网信息
+
 MyBatis SQL Mapper Framework for Java
 =====================================
 
@@ -20,3 +24,4 @@ Essentials
 * [See the docs](http://mybatis.github.io/mybatis-3)
 * [Download Latest](https://github.com/mybatis/mybatis-3/releases)
 * [Download Snapshot](https://oss.sonatype.org/content/repositories/snapshots/org/mybatis/mybatis/)
+
